@@ -98,48 +98,36 @@ define([
                             clearInterval(timerInterval);
                         }
                     }).then((result) => {
-                        if (result.dismiss === Swal.DismissReason.timer) {
-                            if (mx.session.isGuest()) {
-                                if (redirect) {
-                                    window.location.href = redirect;
-                                }
-                            } else {
-                                mx.logout();
-                                if (redirect) {
-                                    window.location.href = redirect;
-                                }
-                            }
-                        } else if (result.dismiss === Swal.DismissReason.cancel)
-                        {
-                            if (mx.session.isGuest()) {
-                                if (redirect) {
-                                    window.location.href = redirect;
-                                }
-                            } else {
-                                mx.logout();
-                                if (redirect) {
-                                    window.location.href = redirect;
-                                }
-                            }
-                        } else {
+                        if (result.dismiss != Swal.DismissReason.timer && result.dismiss != Swal.DismissReason.cancel) {
+                            isShowingSwal = false;
                             document.cookie = 'SessionTimeout_Status=Active';
                             var now = Date.now();
-                            var idle = now + (minutes * 60);
-                            isShowingSwal = false;
+                            var idle = now + (minutes * 60000);
                             document.cookie = "SessionTimeout_IdleOn=" + idle;
+                        } else {
+                            if (mx.session.isGuest()) {
+                                if (redirect) {
+                                    window.location.href = redirect;
+                                }
+                            } else {
+                                mx.logout();
+                                if (redirect) {
+                                    window.location.href = redirect;
+                                }
+                            }
                         }
                     });
                 } else if (now >= idle && isShowingSwal) {
                     if (getCookie('SessionTimeout_Status') == 'Active') {
                         Swal.close();
-                        isShowingSwal = false();
+                        isShowingSwal = false;
                     }
                 } else {
                     document.cookie = 'SessionTimeout_Status=Active';
                     Swal.close();
                     isShowingSwal = false;
                 }
-              }, 1000);
+              }, 250);
 
             function getCookie(cname) {
                 let name = cname + "=";
