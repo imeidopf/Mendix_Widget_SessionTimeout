@@ -110,7 +110,7 @@ define([
                                     window.location.href = redirect;
                                 }
                             } else {
-                                mx.logout();
+                                mx.session.logout();
                                 if (redirect) {
                                     window.location.href = redirect;
                                 }
