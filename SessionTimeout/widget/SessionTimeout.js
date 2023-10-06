@@ -110,9 +110,11 @@ define([
                                     window.location.href = redirect;
                                 }
                             } else {
-                                mx.session.logout();
-                                if (redirect) {
+                                if (redirect){
+                                    mx.session.logout();
                                     window.location.href = redirect;
+                                } else {
+                                    mx.logout();
                                 }
                             }
                         }
