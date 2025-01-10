@@ -1,14 +1,12 @@
 import { ReactNode, useEffect} from "react";
 import Swal from "sweetalert2";
 
-//import "./ui/SessionTimeout.css";
-
 interface SessionTimeoutProps {
     paramMinutes: number;
     paramModalDuration: number;
     paramTitle: string;
     paramMessage: string;
-    paramNavAwayLink?: string;
+    // paramNavAwayLink?: string;
 }
 
 export default function SessionTimeout({
@@ -16,13 +14,14 @@ export default function SessionTimeout({
     paramModalDuration,
     paramTitle,
     paramMessage,
-    paramNavAwayLink
+    // paramNavAwayLink
 }: SessionTimeoutProps): ReactNode {
     let isShowingSwal:boolean = false;
     const modalDuration = paramModalDuration * 1000;
     const idleEpoch = Date.now() + paramMinutes * 60000;
-    const redirect = paramNavAwayLink;
+    // const redirect = paramNavAwayLink;
     let timerInterval: NodeJS.Timeout;
+    
     useEffect(() => {
         document.cookie = "SessionTimeout_Status=Active";
         document.cookie = `SessionTimeout_IdleOn=${idleEpoch}`;
@@ -36,15 +35,16 @@ export default function SessionTimeout({
             if (localStorage.key === "SessionTimeout_Logout") {
                 // @ts-ignore
                 if (mx.session.isGuest()) {
-                    if (paramNavAwayLink) {
-                        window.location.assign(paramNavAwayLink);
-                    }
+                    window.location.href = "/";
+                    // if (paramNavAwayLink) {
+                    //     window.location.assign(paramNavAwayLink);
+                    // }
                 } else {
                     // @ts-ignore
                     mx.logout();
-                    if (paramNavAwayLink) {
-                        window.location.assign(paramNavAwayLink);
-                    }
+                    // if (paramNavAwayLink) {
+                    //     window.location.assign(paramNavAwayLink);
+                    // }
                 }
             }
         };
@@ -57,7 +57,7 @@ export default function SessionTimeout({
             activityEvents.forEach(event => document.removeEventListener(event, resetIdleTimer));
             window.removeEventListener("storage", handleStorageChange);
         };
-    }, [paramMinutes, paramModalDuration, paramTitle, paramMessage, paramNavAwayLink]);
+    }, [paramMinutes, paramModalDuration, paramTitle, paramMessage]);
 
     function resetIdleTimer() {
         const idleEpoch = Date.now() + paramMinutes * 60000;
@@ -113,7 +113,6 @@ export default function SessionTimeout({
                     timerInterval = setInterval(() => {
                         if (b) b.textContent = Math.round(Swal.getTimerLeft()! / 1000).toString();
                     }, 100);
-                    console.log(redirect)
                 },
                 willClose: () => clearInterval(timerInterval)
             }).then(result => {
@@ -124,15 +123,16 @@ export default function SessionTimeout({
                 } else {
                         // @ts-ignore
                         if (mx.session.isGuest()) {
-                          if (redirect){
-                            window.location.assign(redirect);
-                          }
+                            window.location.href = "/";
+                        //   if (redirect){
+                        //     window.location.assign(redirect);
+                        //   }
                       } else { 
                           // @ts-ignore
                           mx.logout();
-                          if (redirect) {
-                            window.location.assign(redirect);
-                          }
+                        //   if (redirect) {
+                        //     window.location.assign(redirect);
+                        //   }
                       }
                       // Notify all tabs to log out
                         localStorage.setItem("SessionTimeout_Logout", Date.now().toString());
