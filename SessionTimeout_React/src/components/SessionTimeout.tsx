@@ -1,12 +1,16 @@
 import { ReactNode, useEffect} from "react";
 import Swal from "sweetalert2";
+import Cookie from 'js-cookie';
 
 interface SessionTimeoutProps {
     paramMinutes: number;
     paramModalDuration: number;
     paramTitle: string;
     paramMessage: string;
-    // paramNavAwayLink?: string;
+    paramConfirm: string;
+    paramCancel: string;
+    paramNavAwayLink?: string;
+    isLoginPage: boolean;
 }
 
 export default function SessionTimeout({
@@ -14,41 +18,46 @@ export default function SessionTimeout({
     paramModalDuration,
     paramTitle,
     paramMessage,
-    // paramNavAwayLink
+    paramConfirm,
+    paramCancel,
+    paramNavAwayLink,
+    isLoginPage,
 }: SessionTimeoutProps): ReactNode {
     let isShowingSwal:boolean = false;
     const modalDuration = paramModalDuration * 1000;
-    const idleEpoch = Date.now() + paramMinutes * 60000;
-    // const redirect = paramNavAwayLink;
+    const idleEpoch = Date.now() + paramMinutes * 60000 - paramModalDuration * 1000;
+    let redirect:string = paramNavAwayLink!;
     let timerInterval: NodeJS.Timeout;
     
     useEffect(() => {
         document.cookie = "SessionTimeout_Status=Active";
         document.cookie = `SessionTimeout_IdleOn=${idleEpoch}`;
-
+        
         const activityEvents = ["mousemove", "mousedown", "mouseup", "keydown", "keyup", "focus"];
         activityEvents.forEach(event => document.addEventListener(event, resetIdleTimer));
-
         const interval = setInterval(handleIdleCheck, 250);
 
+        //If login page has this widget, redirects to last session timeout widget's redirect link
+        if (isLoginPage){
+            if (Cookie.get('SessionTimeout_Redirect')!){
+                window.location.assign(Cookie.get('SessionTimeout_Redirect')!);
+                Cookie.remove('SessionTimeout_Redirect');
+            }
+        }
+
+        else {
+        //Action to logout across all tabs
         const handleStorageChange = (localStorage: StorageEvent) => {
             if (localStorage.key === "SessionTimeout_Logout") {
                 // @ts-ignore
                 if (mx.session.isGuest()) {
                     window.location.href = "/";
-                    // if (paramNavAwayLink) {
-                    //     window.location.assign(paramNavAwayLink);
-                    // }
                 } else {
                     // @ts-ignore
                     mx.logout();
-                    // if (paramNavAwayLink) {
-                    //     window.location.assign(paramNavAwayLink);
-                    // }
                 }
             }
         };
-
         // Listen for logout events from other tabs
         window.addEventListener("storage", handleStorageChange);
 
@@ -57,10 +66,12 @@ export default function SessionTimeout({
             activityEvents.forEach(event => document.removeEventListener(event, resetIdleTimer));
             window.removeEventListener("storage", handleStorageChange);
         };
-    }, [paramMinutes, paramModalDuration, paramTitle, paramMessage]);
+    }
+    }, [paramMinutes, paramModalDuration, paramTitle, paramMessage, paramNavAwayLink, isLoginPage]);
+
 
     function resetIdleTimer() {
-        const idleEpoch = Date.now() + paramMinutes * 60000;
+        const idleEpoch = Date.now() + paramMinutes * 60000 - paramModalDuration * 1000;
         if (!isShowingSwal) {
             document.cookie = `SessionTimeout_IdleOn=${idleEpoch}`;
         }
@@ -83,12 +94,6 @@ export default function SessionTimeout({
         return "";
     };
 
-    // function redirect(link: string): string{
-    //     const url = (paramNavAwayLink, asLink = true) =>
-    //         asLink ? (window.location.href = paramNavAwayLink) : window.location.replace(paramNavAwayLink);
-    //     return url;
-    // }
-
     function handleIdleCheck() {
         const now = Date.now();
         const idle = parseInt(getCookie("SessionTimeout_IdleOn"));
@@ -101,9 +106,9 @@ export default function SessionTimeout({
                 title: paramTitle,
                 html: `${paramMessage}<br /><br /><p>Logging out in <b></b> seconds.</p>`,
                 showConfirmButton: true,
-                confirmButtonText: "Stay Signed In",
+                confirmButtonText: paramConfirm,
                 showCancelButton: true,
-                cancelButtonText: "Log Out",
+                cancelButtonText: paramCancel,
                 showCloseButton: true,
                 allowOutsideClick: false,
                 timer: modalDuration,
@@ -121,21 +126,28 @@ export default function SessionTimeout({
                     document.cookie = "SessionTimeout_Status=Active";
                     resetIdleTimer();
                 } else {
+                    Swal.fire({
+                        title: 'Loading...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        },
+                    });
+                    if (paramNavAwayLink) {
+                        localStorage.setItem("SessionTimeout_Redirect", paramNavAwayLink);
+                    }
+                    // @ts-ignore
+                    if (mx.session.isGuest()) {
+                        window.location.href = "/";
+                    } else { 
+                        Cookie.set('SessionTimeout_Redirect', redirect);
+                        
                         // @ts-ignore
-                        if (mx.session.isGuest()) {
-                            window.location.href = "/";
-                        //   if (redirect){
-                        //     window.location.assign(redirect);
-                        //   }
-                      } else { 
-                          // @ts-ignore
-                          mx.logout();
-                        //   if (redirect) {
-                        //     window.location.assign(redirect);
-                        //   }
-                      }
-                      // Notify all tabs to log out
-                        localStorage.setItem("SessionTimeout_Logout", Date.now().toString());
+                        mx.logout()
+                        Swal.close();
+                    }
+                    // Log all tabs to log out in a localStorage
+                    localStorage.setItem("SessionTimeout_Logout", Date.now().toString());
                 }
             }); 
         } else if (now >= idle && isShowingSwal) {
@@ -149,6 +161,6 @@ export default function SessionTimeout({
                 isShowingSwal = false;
         }
     };
-
+    
     return null;
 }

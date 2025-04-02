@@ -1,7 +1,7 @@
 {
   "name": "sessiontimeout",
   "widgetName": "SessionTimeout",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Determines a session timeout for a user based on cookies",
   "copyright": "© Mendix Technology BV 2022. All rights reserved.",
   "author": "Jae Smith",

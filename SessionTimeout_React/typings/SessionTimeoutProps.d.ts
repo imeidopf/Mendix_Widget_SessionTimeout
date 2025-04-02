@@ -10,10 +10,14 @@ export interface SessionTimeoutContainerProps {
     class: string;
     style?: CSSProperties;
     tabIndex?: number;
+    isLoginPage: boolean;
     paramMinutes: number;
     paramTitle: string;
     paramMessage: string;
+    paramConfirm: string;
+    paramCancel: string;
     paramModalDuration: number;
+    paramNavAwayLink: string;
 }
 
 export interface SessionTimeoutPreviewProps {
@@ -27,8 +31,12 @@ export interface SessionTimeoutPreviewProps {
     readOnly: boolean;
     renderMode: "design" | "xray" | "structure";
     translate: (text: string) => string;
+    isLoginPage: boolean;
     paramMinutes: number | null;
     paramTitle: string;
     paramMessage: string;
+    paramConfirm: string;
+    paramCancel: string;
     paramModalDuration: number | null;
+    paramNavAwayLink: string;
 }
